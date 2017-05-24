@@ -1,21 +1,22 @@
-Thisversion is writen for the Nano Arduino
+//Thisversion is writen for the Nano Arduino
 
 // Define Variables:
 
 // Input Chanels from RC receiver
-const int STEERING = 0;  
-const int THROTTLE = 1;
-const int AUX_TR   = 2;
-const int AUX_ST  = 3;
+const int STEERING = 2;  
+const int THROTTLE = 3;
+const int AUX_TR   = 4;
+const int AUX_ST  = 5;
 
 // Output chanels for the LED's
-const int BLINK_LEFT  = 4;
-const int BLINK_RIGHT = 5;
+
 const int BACK_DRIVE  = 6;
 const int BRAKE_LIGHT = 7;
 const int HIGH_BEAM = 8;
 const int LOW_BEAM = 9;
 const int PARK_LIGHT = 10;
+const int BLINK_LEFT  = 11;
+const int BLINK_RIGHT = 12;
 
 //Varibles to store and display the values of each channel
 int ch_STEERING;  
@@ -114,17 +115,26 @@ void loop() {
     digitalWrite(BLINK_RIGHT,LOW);
   }
   
-  // If we drive back we turn the white back LED on
   if (ch_THROTTLE > RC_HIGH) 
   {
     Serial.println ("WHITE LIGHT");
-    blink(BACK_DRIVE,1000);
+    digitalWrite(HIGH_BEAM,HIGH);
+  }
+  else
+  {
+    digitalWrite(HIGH_BEAM,LOW);
+  }   
+  
+  // If we drive back we turn the white back LED on
+  if (ch_THROTTLE < RC_LOW) 
+  {
+    Serial.println ("Back LIGHT");
+    digitalWrite(BACK_DRIVE,HIGH);
   }
   else
   {
     digitalWrite(BACK_DRIVE,LOW);
-  } 
-   
+  }
 
 }
 // This function turn on off a LED for interval miliseconds (for example 1000 represents 1 second)
