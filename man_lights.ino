@@ -67,28 +67,77 @@ void loop() {
   * http://rcarduino.blogspot.de/2012/11/how-to-read-rc-channels-rcarduinofastlib.html
   */
   
-    
+  blinker()   ; 
   ch_STEERING = pulseIn (STEERING,HIGH);  //Read and store channel 1
   ch_THROTTLE = pulseIn (THROTTLE,HIGH);
   ch_AUX_TR = pulseIn (AUX_TR,HIGH);
-  ch_AUX_ST = pulseIn (AUX_ST,HIGH);
+
   
 #ifdef SERIAL_DEBUG    
   Serial.print ("STEERING:");  //Display text string on Serial Monitor to distinguish variables
-  Serial.print (ch_STEERING);     //Print in the value of channel 1
+  Serial.print (ch_STEERING);     //Print in the value of channel 3
   Serial.print ("|");
   Serial.print ("THROTTLE:");  //Display text string on Serial Monitor to distinguish variables
   Serial.print (ch_THROTTLE);     //Print in the value of channel 1
   Serial.print ("|");
   Serial.print ("AUX_TR:");  //Display text string on Serial Monitor to distinguish variables
-  Serial.print (ch_AUX_TR);     //Print in the value of channel 1
+  Serial.print (ch_AUX_TR);     //Print in the value of channel 2
   Serial.print ("|");
   Serial.print ("AUX_ST:");  //Display text string on Serial Monitor to distinguish variables
-  Serial.print (ch_AUX_ST);     //Print in the value of channel 1
+  Serial.print (ch_AUX_ST);     //Print in the value of channel 4
   Serial.print ("|");
   Serial.println("--");
  #endif
-/* 
+
+  if (ch_THROTTLE > RC_HIGH) 
+  {
+    Serial.println ("WHITE LIGHT");
+    digitalWrite(HIGH_BEAM,HIGH);
+  }
+  else
+  {
+    digitalWrite(HIGH_BEAM,LOW);
+  }   
+  // If we drive back we turn the white back LED on
+  if (ch_THROTTLE < RC_LOW) 
+  {
+    Serial.println ("Back LIGHT");
+    digitalWrite(BACK_DRIVE,HIGH);
+  }
+  else
+  {
+    digitalWrite(BACK_DRIVE,LOW);
+  }
+
+}  // end Loop()
+
+// This function turn on off a LED for interval miliseconds (for example 1000 represents 1 second)
+void blink(int port,long interval)
+  {
+      unsigned long currentMilis;
+      currentMilis = millis();
+      if (currentMilis - previousMilis >= interval)
+      {
+          
+      //save last switch
+          previousMilis = currentMilis;
+      //switch the LED to oposite state as before
+          if (ledState == LOW) {
+            ledState = HIGH;
+          } else {
+            ledState = LOW;
+          }
+          // set the LED with the ledState of the variable:
+          digitalWrite(port, ledState);
+      }
+  }  
+
+// Handler for the blinking
+
+  void blinker()
+  { 
+    ch_AUX_ST = pulseIn (AUX_ST,HIGH);
+    /* 
  *  Blinker
  *  
  */
@@ -114,46 +163,18 @@ void loop() {
   {
     digitalWrite(BLINK_RIGHT,LOW);
   }
-  
-  if (ch_THROTTLE > RC_HIGH) 
-  {
-    Serial.println ("WHITE LIGHT");
-    digitalWrite(HIGH_BEAM,HIGH);
-  }
-  else
-  {
-    digitalWrite(HIGH_BEAM,LOW);
-  }   
-  
-  // If we drive back we turn the white back LED on
-  if (ch_THROTTLE < RC_LOW) 
-  {
-    Serial.println ("Back LIGHT");
-    digitalWrite(BACK_DRIVE,HIGH);
-  }
-  else
-  {
-    digitalWrite(BACK_DRIVE,LOW);
+    return;
+
   }
 
-}
-// This function turn on off a LED for interval miliseconds (for example 1000 represents 1 second)
-void blink(int port,long interval)
+  void debugPrint()
   {
-      unsigned long currentMilis;
-      currentMilis = millis();
-      if (currentMilis - previousMilis >= interval)
-      {
-          
-      //save last switch
-          previousMilis = currentMilis;
-      //switch the LED to oposite state as before
-          if (ledState == LOW) {
-            ledState = HIGH;
-          } else {
-            ledState = LOW;
-          }
-          // set the LED with the ledState of the variable:
-          digitalWrite(port, ledState);
-      }
-  }  
+    
+  }
+  void debugPrinLn() 
+  {
+
+  }
+
+
+// Program end
