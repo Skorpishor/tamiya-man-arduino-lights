@@ -1,6 +1,22 @@
 //Thisversion is writen for the Nano Arduino
 
+// define the debug output
+#define SERIAL_DEBUG
+#ifdef SERIAL_DEBUG
+#define debugPrint(arg) Serial.print(arg)
+#define debugPrintln(arg) Serial.println(arg)
+#else
+#define debugPrint(arg) doNothing(arg)
+#define debugPrintln(arg) doNothing(arg)
+#endif
+
 // Define Variables:
+
+boolean RIGHT_SET = false; // This variable mark if we RC signal to left is allready active, untill this will go true neutral 
+boolean LEFT_SET =  false; // This variable mark if we RC signal to right is allready active, untill this will go true neutral
+boolean LEFT_ON = false;  // The blinker to left is off
+boolean RIGHT_ON = false; // The blinker to right is off
+
 
 // Input Chanels from RC receiver
 const int STEERING = 2;  
@@ -25,10 +41,12 @@ int ch_AUX_TR;
 int ch_AUX_ST;
 // Aditional Variables and constants
 unsigned long previousMilis =0;
-int ledState = LOW;             // ledState used to set the LED
+unsigned long currentMilis = 0;
+static int ledState = LOW;             // ledState used to set the LED
+
 //Change the next values to values fiting for your RC Sender/receiver. Read them from the serial prints by defining the SERIAL_DEBUG
 #define RC_LOW 1300 // the value of a chanel from where we consider that the RC sender stick is moved to links resp down
-#define RC_HIGH 1450 // the value of a chanel from where we consider that the RC sender stick is moved to right resp up
+#define RC_HIGH 1500 // the value of a chanel from where we consider that the RC sender stick is moved to right resp up
 
 #define SERIAL_DEBUG // comment/uncomment this define if you need/do not need the serial debug, for example to read the values from the RC chanell inputs
 
@@ -44,7 +62,7 @@ void setup() {
   pinMode(THROTTLE,INPUT);
   pinMode(AUX_TR,INPUT);
   pinMode(AUX_ST,INPUT);
-  Serial.println("Start--");
+  debugPrintln("Start--");
     
 unsigned long previousMillis = 0;        // will store last time LED was updated
 
@@ -72,26 +90,29 @@ void loop() {
   ch_THROTTLE = pulseIn (THROTTLE,HIGH);
   ch_AUX_TR = pulseIn (AUX_TR,HIGH);
 
+  if (RIGHT_ON == true) blink(BLINK_RIGHT,1000);
+  if (LEFT_ON == true) blink(BLINK_LEFT,1000);  
   
-#ifdef SERIAL_DEBUG    
-  Serial.print ("STEERING:");  //Display text string on Serial Monitor to distinguish variables
-  Serial.print (ch_STEERING);     //Print in the value of channel 3
-  Serial.print ("|");
-  Serial.print ("THROTTLE:");  //Display text string on Serial Monitor to distinguish variables
-  Serial.print (ch_THROTTLE);     //Print in the value of channel 1
-  Serial.print ("|");
-  Serial.print ("AUX_TR:");  //Display text string on Serial Monitor to distinguish variables
-  Serial.print (ch_AUX_TR);     //Print in the value of channel 2
-  Serial.print ("|");
-  Serial.print ("AUX_ST:");  //Display text string on Serial Monitor to distinguish variables
-  Serial.print (ch_AUX_ST);     //Print in the value of channel 4
-  Serial.print ("|");
-  Serial.println("--");
- #endif
+  
+ /*   
+  debugPrint ("STEERING:");  //Display text string on Serial Monitor to distinguish variables
+  debugPrint (ch_STEERING);     //Print in the value of channel 3
+  debugPrint ("|");
+  debugPrint ("THROTTLE:");  //Display text string on Serial Monitor to distinguish variables
+  debugPrint (ch_THROTTLE);     //Print in the value of channel 1
+  debugPrint ("|");
+  debugPrint ("AUX_TR:");  //Display text string on Serial Monitor to distinguish variables
+  debugPrint (ch_AUX_TR);     //Print in the value of channel 2
+  debugPrint ("|");
+  debugPrint ("AUX_ST:");  //Display text string on Serial Monitor to distinguish variables
+  debugPrint (ch_AUX_ST);     //Print in the value of channel 4
+  debugPrint ("|");
+  debugPrintln("--");
+*/
 
   if (ch_THROTTLE > RC_HIGH) 
   {
-    Serial.println ("WHITE LIGHT");
+    debugPrintln ("WHITE LIGHT");
     digitalWrite(HIGH_BEAM,HIGH);
   }
   else
@@ -101,7 +122,7 @@ void loop() {
   // If we drive back we turn the white back LED on
   if (ch_THROTTLE < RC_LOW) 
   {
-    Serial.println ("Back LIGHT");
+    debugPrintln ("Back LIGHT");
     digitalWrite(BACK_DRIVE,HIGH);
   }
   else
@@ -114,12 +135,16 @@ void loop() {
 // This function turn on off a LED for interval miliseconds (for example 1000 represents 1 second)
 void blink(int port,long interval)
   {
-      unsigned long currentMilis;
+//      unsigned long currentMilis;
       currentMilis = millis();
+      debugPrintln(" =================================== ");    
+      debugPrint("curent: "); debugPrint(currentMilis);   debugPrint(" prev: ");   debugPrint(previousMilis);
+      debugPrint(" --- "); debugPrintln(currentMilis-previousMilis);   
+      debugPrintln(" =================================== ");    
+ 
       if (currentMilis - previousMilis >= interval)
       {
-          
-      //save last switch
+     //save last switch
           previousMilis = currentMilis;
       //switch the LED to oposite state as before
           if (ledState == LOW) {
@@ -133,40 +158,75 @@ void blink(int port,long interval)
   }  
 
 // Handler for the blinking
-
-  void blinker()
-  { 
-    ch_AUX_ST = pulseIn (AUX_ST,HIGH);
-    /* 
+ /* 
  *  Blinker
  *  
  */
-  if (ch_AUX_ST < RC_LOW) 
-  {
- #ifdef SERIAL_DEBUG     
-    Serial.println ("LEFT BLINK");
- #endif     
-    blink(BLINK_LEFT,1000);
-      
-  }
-  else
-  {
-    digitalWrite(BLINK_LEFT,LOW);
-    
-  }
-  if (ch_AUX_ST > RC_HIGH) 
-  {
-    Serial.println ("RIGHT");
-    blink(BLINK_RIGHT,1000);
-  }
-  else
+void blinker()
+{ 
+  ch_AUX_ST = pulseIn (AUX_ST,HIGH);
+/*    debugPrint ("LEFT SET ");
+    debugPrint (LEFT_SET); 
+    debugPrint (" RIGHT SET ");
+    debugPrintln (RIGHT_SET);      */
+  if (ch_AUX_ST < RC_LOW) //RC AUX_ST is on LEFT
   {
     digitalWrite(BLINK_RIGHT,LOW);
-  }
-    return;
+    RIGHT_ON = false;
+    if( LEFT_SET == false )
+    {
+      if(LEFT_ON == false)
+      {
+      blink(BLINK_LEFT,1000);
+//        digitalWrite(BLINK_LEFT,HIGH);
+        LEFT_ON = true;
+      }
+      else
+      {
+        digitalWrite(BLINK_LEFT,LOW);
+        LEFT_ON = false;
+      }
+       LEFT_SET = true; 
+    }
+    debugPrintln ("LEFT BLINK ");
 
   }
+  
+  else // RC AUX_ST is on Neutral
+  {
+    LEFT_SET = false;
+    
+  }
 
+  
+    if (ch_AUX_ST > RC_HIGH) //RC AUX_ST is on RIGHT
+    {
+//      digitalWrite(BLINK_LEFT,LOW);
+      LEFT_ON = false;
+      if( RIGHT_SET == false )
+      {
+        if(RIGHT_ON == false)
+        {
+//          blink(BLINK_RIGHT,1000);
+//          digitalWrite(BLINK_RIGHT,HIGH);
+          RIGHT_ON = true;
+        }
+        else
+        {
+          digitalWrite(BLINK_RIGHT,LOW);
+          RIGHT_ON = false;
+        }
+         RIGHT_SET = true; 
+      }
+      debugPrintln ("RIGHT BLINK ");
+    }
+    else // RC AUX_ST is on Neutral
+    {
+      RIGHT_SET = false;
+      
+    }
+  }
+/*
   void debugPrint()
   {
     
@@ -175,6 +235,9 @@ void blink(int port,long interval)
   {
 
   }
-
-
+*/
+  void doNothing(int)
+  {
+    //do Nothing
+  }
 // Program end
