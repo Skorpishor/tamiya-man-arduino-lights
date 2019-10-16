@@ -2,7 +2,6 @@
 #include <WiFi.h>
 #include <IBusBM.h>
 
-//uint8_t trailerMac[] = {0x3C, 0x71, 0xBF, 0x6E, 0xF9, 0x55};
 #include <esp_now.h>
 #include <WiFi.h>
 
@@ -12,7 +11,7 @@ uint8_t trailerMac[] = {0x3C, 0x71, 0xBF, 0x6E, 0xF9, 0x55};
 #define maxDataFrameSize 200
 const esp_now_peer_info_t *peer = &slave;
 uint8_t dataToSend[maxDataFrameSize];
-int RCdata[10];
+uint8_t RCdata[10];
 byte cnt=0;
 
 IBusBM IBusServo;
