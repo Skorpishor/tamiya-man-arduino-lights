@@ -1,4 +1,11 @@
 # tamiya-man-arduino-lights
+
+The project is obsolete as I use the fantastic project: TheDIYGuy999
+/
+Rc_Engine_Sound_ESP32
+
+
+
 In Order to fire the lights for a MAN 18.540 from tamiya I use a arduine (nano) to "read" the RC receiver and turn on the LED's
 
 First Configuration:
